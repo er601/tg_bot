@@ -1,4 +1,7 @@
 venv
 .idea
 _static_
-__pycache__
+__pycache__/
+*.py[cod]
+*.so
+.env

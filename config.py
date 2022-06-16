@@ -1,5 +1,6 @@
 from aiogram import Bot, Dispatcher
+from decouple import config
 
-TOKEN = '5323521589:AAFXsIeQRbPrOQakCDIcLE0f5fMmVDXYj90'
+TOKEN = config("TOKEN")
 bot = Bot(TOKEN)
 dp = Dispatcher(bot=bot)
