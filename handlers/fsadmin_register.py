@@ -3,7 +3,9 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from config import bot
+from database import bot_db
 from keyboards import register_kb
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 class ShowsUserStates(StatesGroup):
@@ -16,8 +18,8 @@ class ShowsUserStates(StatesGroup):
 
 async def start_register(message: types.Message):
     await bot.send_message(message.chat.id,
-                     'Click on the /upload button to start registration',
-                     reply_markup=register_kb.register_markup)
+                           'Click on the /upload button to start registration',
+                           reply_markup=register_kb.register_markup)
 
 
 async def cancel_command(message: types.Message, state: FSMContext):
@@ -59,9 +61,42 @@ async def load_last_name(message: types.Message,
                          state: FSMContext):
     async with state.proxy() as data:
         data['user_last_name'] = message.text
-        data['photo_profile'] = message.from_user.get_profile_photos
-        await message.reply(str(data))
-        await state.finish()
+    await ShowsUserStates.next()
+    await message.reply('Send me your profile photo, please')
+
+
+async def load_profile_photo(message: types.Message,
+                             state: FSMContext):
+    async with state.proxy() as data:
+        data['photo_profile'] = message.photo[0].file_id
+    await bot_db.sql_insert(state)
+    await message.reply('Data saved!')
+    await state.finish()
+
+
+async def complete_delete(call: types.CallbackQuery):
+    await bot_db.sql_delete(call.data.replace('delete ', ''))
+    await call.answer(text=f'{call.data.replace("delete ", "")} Deleted',
+                      show_alert=True)
+
+
+async def delete_data(message: types.Message):
+    selected_data = await bot_db.sql_select_for_delete()
+    for result in selected_data:
+        await bot.send_photo(
+            chat_id=message.chat.id,
+            photo=result[4],
+            caption=f'Account id: {result[0]}\n'
+                    f'User name: {result[1]}\n'
+                    f'First name: {result[2]}\n'
+                    f'Last name: {result[3]}',
+            reply_markup=InlineKeyboardMarkup().add(
+                InlineKeyboardButton(
+                    f'Delete: {result[1]}',
+                    callback_data=f'delete {result[0]}'
+                )
+            )
+        )
 
 
 def register_users_handler(dp: Dispatcher):
@@ -87,5 +122,9 @@ def register_users_handler(dp: Dispatcher):
     dp.register_message_handler(load_last_name,
                                 content_types=['text'],
                                 state=ShowsUserStates.user_last_name)
-    dp.register_message_handler(load_last_name,
+    dp.register_message_handler(load_profile_photo,
+                                content_types=['photo'],
                                 state=ShowsUserStates.photo_profile)
+    dp.register_callback_query_handler(complete_delete,
+                                       lambda call: call.data and call.data.startswith("delete "))
+    dp.register_message_handler(delete_data, commands=['delete'])
