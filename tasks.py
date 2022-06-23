@@ -24,3 +24,39 @@ print('list2 =', list2)
 list3_copy = list3.copy()
 list3.extend(list3_copy)
 print('list3 =', list3)
+
+
+# ---Задача---------
+
+class_points = [2, 4, 100, 70, 40, 66]
+your_points = 66
+
+
+def better_than_average(class_points, your_points):
+    print(sum(class_points) / len(class_points))
+    return False if sum(class_points) / len(class_points) > your_points else True
+
+
+print(better_than_average(class_points, your_points))
+
+# -------Задача--------
+
+
+def seyshely_vacation(d):
+    return (d * 40) if d <= 3 else (d * 40) - 20 if 3 < d < 7 else (d * 40) - 50
+
+
+print(seyshely_vacation(2))
+print(seyshely_vacation(4))
+print(seyshely_vacation(8))
+
+
+# --------Задача-----
+
+
+def converter(usd):
+    return round(usd * 6.75, 2)
+
+
+print(converter(15))
+print(converter(465))
