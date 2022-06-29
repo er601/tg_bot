@@ -21,6 +21,22 @@ def sql_create():
     )
     connection.commit()
 
+    create_shows_table_command = '''
+    CREATE TABLE IF NOT EXISTS films
+    (link TEXT, img TEXT, title TEXT, date_ TEXT)
+    '''
+
+    connection.execute(create_table_query)
+    connection.execute(create_shows_table_command)
+    connection.commit()
+
+
+async def sql_insert_films(data):
+    cursor.execute('''
+    INSERT INTO films VALUES (?, ?, ?, ?)
+    ''', tuple(data.values(), ))
+    connection.commit()
+
 
 async def sql_insert(state):
     async with state.proxy() as data:
